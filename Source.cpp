@@ -13,7 +13,6 @@ MPI_Comm GridComm, ColComm, RowComm;
 MPI_Datatype MPI_BLOCK;
 
 random_device r;
-// Choose a random mean between 1 and 6
 mt19937 engine(r());
 uniform_real_distribution<float> uniform_dist(1, 16);
 
@@ -58,20 +57,6 @@ void InitMatrices()
 				A[i * MatrSize + j] = uniform_dist(engine);
 				B[i * MatrSize + j] = uniform_dist(engine);
 			}
-		//printf("Matrix A\n");
-		//for (int i = 0; i < MatrSize; i++)
-		//{
-		//	for (int j = 0; j < MatrSize; j++)
-		//		Show(A[i * MatrSize + j]);
-		//	printf("\n");;
-		//}
-		//printf("Matrix B\n");
-		//for (int i = 0; i < MatrSize; i++)
-		//{
-		//	for (int j = 0; j < MatrSize; j++)
-		//		Show(B[i * MatrSize + j]);
-		//	printf("\n");
-		//}
 	}
 }
 void DataDistribution()
@@ -105,21 +90,6 @@ void DataDistribution()
 		MPI_Recv(A1, BlockSize * BlockSize, MPI_FLOAT, 0, 0, GridComm, &s);
 		MPI_Recv(B1, BlockSize * BlockSize, MPI_FLOAT, 0, 1, GridComm, &s);
 	}
-
-	//printf("Block A\n");
-	//for (int i = 0; i < BlockSize; i++)
-	//{
-	//	for (int j = 0; j < BlockSize; j++)
-	//		Show(A1[i * BlockSize + j]);
-	//	printf("\n");
-	//}
-	//printf("Block B\n");
-	//for (int i = 0; i < BlockSize; i++)
-	//{
-	//	for (int j = 0; j < BlockSize; j++)
-	//		Show(B1[i * BlockSize + j]);
-	//	printf("\n");
-	//}
 }
 void initialRowShift() {	
 	int coord[2];
@@ -209,13 +179,6 @@ void ParallelCalc()
 }
 void GatherResult()
 {
-	//printf("Block C\n");
-	//for (int i = 0; i < BlockSize; i++)
-	//{
-	//	for (int j = 0; j < BlockSize; j++)
-	//		Show(C1[i * BlockSize + j]);
-	//	printf("\n");
-	//}
 	if (Rank != 0) {
 		MPI_Send(C1, BlockSize * BlockSize, MPI_FLOAT, 0, 0, GridComm);
 	}
@@ -292,7 +255,7 @@ void Solve()
 	DataDistribution();
 	ParallelCalc();
 	GatherResult();
-	TestResult();
+	//TestResult();
 	MPI_Finalize();
 }
 
