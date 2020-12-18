@@ -26,17 +26,11 @@ void CreateGridComm()
 	int SubDims[2];
 	MPI_Cart_create(MPI_COMM_WORLD, 2, DimSize, Periodic, 0, &GridComm);
 	MPI_Cart_coords(GridComm, Rank, 2, GridCoords);
-	SubDims[0] = 0;
-	SubDims[1] = 1;
-	MPI_Cart_sub(GridComm, SubDims, &RowComm);
-	SubDims[0] = 1;
-	SubDims[1] = 0;
-	MPI_Cart_sub(GridComm, SubDims, &ColComm);
 }
-void InitMatrices()
+void InitMatrices(int n)
 {
 	if (Rank == 0)
-		MatrSize = 6; 
+		MatrSize = n; 
 	MPI_Bcast(&MatrSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Barrier(GridComm);
 	BlockSize = MatrSize / GridSize;
@@ -199,15 +193,6 @@ void GatherResult()
 		MPI_Irecv(C + c[0] * MatrSize * BlockSize + c[1] * BlockSize, 1, MPI_BLOCK, 0, 0, GridComm, &q);
 		MPI_Send(C1, BlockSize * BlockSize, MPI_FLOAT, 0, 0, GridComm);
 		MPI_Wait(&q, &s);
-
-
-		printf("Matrix C\n");
-		for (int i = 0; i < MatrSize; i++)
-		{
-			for (int j = 0; j < MatrSize; j++)
-				Show(C[i * MatrSize + j]);
-			printf("\n");
-		}
 	}
 }
 void TestResult()
@@ -223,7 +208,7 @@ void TestResult()
 				for (int k = 0; k < MatrSize; k++)
 					t += A[i * MatrSize + k] * B[k * MatrSize + j];
 				//Show(C[i * MatrSize + j] - t);
-				Show(t);
+				//Show(t);
 				printf("\n");
 			}
 			printf("\n");
@@ -231,13 +216,8 @@ void TestResult()
 
 	}
 }
-void Solve()
+void Solve(int n)
 {
-	MPI_Init(NULL, NULL);
-	int flag;
-	MPI_Initialized(&flag);
-	if (flag == 0)
-		return;
 	MPI_Comm_size(MPI_COMM_WORLD, &ProcCount);
 	printf("number of processes: %i", ProcCount);
 	MPI_Comm_rank(MPI_COMM_WORLD, &Rank);
@@ -251,19 +231,24 @@ void Solve()
 			return;
 		}
 	CreateGridComm();
-	InitMatrices();
+	InitMatrices(n);
 	DataDistribution();
 	ParallelCalc();
 	GatherResult();
 	//TestResult();
-	MPI_Finalize();
 }
 
 int main(int* argv, char** argc) {
+	MPI_Init(NULL, NULL);
+	int flag;
+	MPI_Initialized(&flag);
+	if (flag == 0)
+		return 0;
 	double starttime, endtime;
 	starttime = MPI_Wtime();
-	Solve();
+	Solve(1024);
 	endtime = MPI_Wtime();
-	printf("That took %f seconds\n", endtime - starttime);
-	
+	printf("That took %f seconds\n for matrix dim = 1024", endtime - starttime);
+	MPI_Finalize();
+	return 0;
 }
